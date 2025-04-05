@@ -1,0 +1,2534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electric Code Challenge - Interactive NEC Quiz Platform</title>
+    <style>
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal {
+            background-color: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-tab {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        
+        .modal-tab.active {
+            border-bottom: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .modal-content {
+            display: none;
+        }
+        
+        .modal-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+        }
+        
+        .form-error {
+            color: var(--danger);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: none;
+        }
+        
+        .form-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            color: #155724;
+            display: none;
+        }
+        
+        .verification-message {
+            background-color: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.2);
+            border-radius: 4px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        /* User dropdown menu */
+        .user-menu {
+            position: relative;
+        }
+        
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 200px;
+            z-index: 100;
+            display: none;
+        }
+        
+        .user-dropdown.active {
+            display: block;
+        }
+        
+        .user-dropdown a {
+            display: block;
+            padding: 0.75rem 1rem;
+            color: var(--dark);
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+        
+        .user-dropdown a:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .user-dropdown-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 0.5rem 0;
+        }
+        
+        /* Header user section */
+        .header-user {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            position: absolute;
+            right: 2rem;
+            top: 1.5rem;
+        }
+        
+        .header-user-name {
+            font-weight: bold;
+            display: none;
+        }
+        
+        .header-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .header-login-btn {
+            background-color: var(--secondary);
+            color: var(--dark);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+    <style>
+        :root {
+            --primary: #0066cc;
+            --secondary: #ffd700;
+            --accent: #ff6b00;
+            --dark: #1a1a1a;
+            --light: #f0f3f7;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --blueprint: #0e324f;
+            --electric-yellow: #ffff00;
+            --conduit-gray: #a8a8a8;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light);
+            color: var(--dark);
+            background-image: 
+                linear-gradient(rgba(240, 243, 247, 0.97), rgba(240, 243, 247, 0.97)),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M10,10 L90,10 L90,90 L10,90 Z' fill='none' stroke='%23dedede' stroke-width='0.5'/%3E%3Cpath d='M30,10 L30,30 L70,30 L70,70 L30,70 L30,90' fill='none' stroke='%23dedede' stroke-width='0.5'/%3E%3Cpath d='M50,10 L50,50 L10,50' fill='none' stroke='%23dedede' stroke-width='0.5'/%3E%3C/svg%3E");
+        }
+        
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--blueprint), #051b2c);
+            color: white;
+            padding: 0;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border-bottom: 4px solid var(--accent);
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+        }
+        
+        .circuit-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cpath d='M20,20 L180,20 L180,180 L20,180 Z' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.2'/%3E%3Cpath d='M60,20 L60,60 L140,60 L140,140 L60,140 L60,180' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.2'/%3E%3Cpath d='M100,20 L100,100 L20,100' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.2'/%3E%3Cpath d='M180,100 L160,100 L160,40' fill='none' stroke='%23ffffff' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='60' cy='60' r='6' fill='%23ffd700' opacity='0.5'/%3E%3Ccircle cx='140' cy='60' r='6' fill='%23ffd700' opacity='0.5'/%3E%3Ccircle cx='140' cy='140' r='6' fill='%23ffd700' opacity='0.5'/%3E%3Ccircle cx='60' cy='140' r='6' fill='%23ffd700' opacity='0.5'/%3E%3Ccircle cx='100' cy='100' r='6' fill='%23ffd700' opacity='0.5'/%3E%3Ccircle cx='160' cy='40' r='6' fill='%23ffd700' opacity='0.5'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            z-index: 0;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .logo-icon {
+            height: 70px;
+            width: 70px;
+            background-color: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: bold;
+            margin-right: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        
+        .logo-icon::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, rgba(255,255,255,0.9) 0%, rgba(255,215,0,0) 70%);
+            opacity: 0.6;
+        }
+        
+        .logo-icon::after {
+            content: "⚡";
+            position: relative;
+            z-index: 1;
+        }
+        
+        .logo h1 {
+            font-size: 2.5rem;
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        
+        .logo h1::before {
+            content: "Electric Code Challenge";
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, #fff, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            z-index: -1;
+            filter: blur(4px);
+            opacity: 0.5;
+        }
+        
+        header p {
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+            max-width: 600px;
+            color: #e0e0e0;
+        }
+        
+        nav {
+            background-color: var(--dark);
+            display: flex;
+            justify-content: center;
+            padding: 0;
+            overflow-x: auto;
+            border-bottom: 3px solid var(--conduit-gray);
+            position: relative;
+        }
+        
+        nav::before {
+            content: "";
+            position: absolute;
+            height: 6px;
+            top: -6px;
+            left: 0;
+            right: 0;
+            background: repeating-linear-gradient(
+                to right,
+                var(--accent),
+                var(--accent) 10px,
+                var(--dark) 10px,
+                var(--dark) 20px
+            );
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            margin: 0;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        nav a:first-child {
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        nav a::before {
+            content: "";
+            position: absolute;
+            width: 0%;
+            height: 3px;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--secondary);
+            transition: width 0.3s ease;
+        }
+        
+        nav a.active::before, nav a:hover::before {
+            width: 80%;
+        }
+        
+        nav a:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--secondary);
+        }
+        
+        nav a.active {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--secondary);
+        }
+        
+        nav a svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Dashboard Layout */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 2rem;
+        }
+        
+        /* User Profile Card */
+        .user-profile {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid var(--primary);
+        }
+        
+        .user-profile::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cpath d='M0,0 L100,0 L100,100 L0,100 Z' fill='none' stroke='%23dedede' stroke-width='1'/%3E%3Cpath d='M0,50 L100,50' fill='none' stroke='%23dedede' stroke-width='1'/%3E%3Cpath d='M50,0 L50,100' fill='none' stroke='%23dedede' stroke-width='1'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #2389da);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+            position: relative;
+            box-shadow: 0 8px 16px rgba(0,102,204,0.3);
+            border: 4px solid white;
+        }
+        
+        .avatar::after {
+            content: "";
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background-color: var(--success);
+            border-radius: 50%;
+            bottom: 5px;
+            right: 5px;
+            border: 3px solid white;
+        }
+        
+        .user-stats {
+            text-align: center;
+            margin-bottom: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .user-stats h3 {
+            font-size: 1.6rem;
+            margin: 0 0 0.25rem 0;
+            color: var(--dark);
+        }
+        
+        .user-stats p {
+            margin: 0.25rem 0;
+            color: #666;
+        }
+        
+        .level-badge {
+            display: inline-block;
+            padding: 0.35rem 0.75rem;
+            background-color: var(--light);
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--dark);
+            margin-top: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .level-badge::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(to right, rgba(255,255,255,0.2), transparent);
+            transform: rotate(45deg);
+            top: -50px;
+            left: -50px;
+            animation: shineEffect 3s infinite;
+        }
+        
+        @keyframes shineEffect {
+            0% { left: -50px; }
+            20% { left: 120%; }
+            100% { left: 120%; }
+        }
+        
+        .progress-bars {
+            margin-top: 2rem;
+            background-color: rgba(240, 243, 247, 0.7);
+            border-radius: 8px;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .progress-item {
+            margin-bottom: 1.5rem;
+        }
+        
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .progress-label span {
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .progress-label span:last-child {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-value {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), #4c9aff);
+            border-radius: 5px;
+            position: relative;
+        }
+        
+        .progress-value::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                to right,
+                transparent 0%,
+                rgba(255, 255, 255, 0.4) 50%,
+                transparent 100%
+            );
+            background-size: 200% 100%;
+            animation: progressShine 2s infinite;
+        }
+        
+        @keyframes progressShine {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-rows: auto 1fr;
+            gap: 2rem;
+        }
+        
+        .quiz-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .quiz-header {
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            background-color: #f9f9f9;
+            margin-bottom: 0;
+        }
+        
+        .quiz-header h3 {
+            margin: 0 0 1rem 0;
+            color: var(--blueprint);
+            font-size: 1.5rem;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        .quiz-header h3::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 80%;
+            background: linear-gradient(to bottom, var(--primary), var(--accent));
+            border-radius: 4px;
+        }
+        
+        .quiz-stats-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .timer {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--warning);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 193, 7, 0.1);
+            border-radius: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .question-counter {
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--dark);
+            padding: 0.5rem 1rem;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 2rem;
+        }
+        
+        .quiz-score {
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            background-color: rgba(0, 102, 204, 0.1);
+            border-radius: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .question {
+            padding: 2rem;
+            position: relative;
+        }
+        
+        .question h3 {
+            margin-bottom: 2rem;
+            font-size: 1.3rem;
+            line-height: 1.5;
+            color: var(--dark);
+            position: relative;
+            padding: 0.5rem 0 0.5rem 2.5rem;
+            border-radius: 4px;
+            background-color: rgba(0,0,0,0.02);
+        }
+        
+        .question h3::before
+        
+        .option {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .option:hover {
+            background-color: #f9f9f9;
+            border-color: #ccc;
+        }
+        
+        .option.selected {
+            border-color: var(--primary);
+            background-color: rgba(0,102,204,0.05);
+        }
+        
+        .option.correct {
+            border-color: var(--success);
+            background-color: rgba(40,167,69,0.1);
+        }
+        
+        .option.incorrect {
+            border-color: var(--danger);
+            background-color: rgba(220,53,69,0.1);
+        }
+        
+        .explanation {
+            background-color: #f9f9f9;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            display: none;
+        }
+        
+        .explanation.show {
+            display: block;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #0055aa;
+        }
+        
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+        
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            margin: 0;
+            color: var(--primary);
+        }
+        
+        .stat-card p {
+            margin: 0.5rem 0 0;
+            color: #666;
+        }
+        
+        .performance-charts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .chart {
+            width: 100%;
+            height: 250px;
+            position: relative;
+        }
+        
+        .radar-chart {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .radar-point {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+        }
+        
+        .radar-line {
+            position: absolute;
+            height: 1px;
+            background-color: rgba(0, 102, 204, 0.2);
+            transform-origin: center left;
+        }
+        
+        .radar-area {
+            position: absolute;
+            clip-path: polygon(50% 50%, 50% 10%, 85% 30%, 85% 70%, 50% 85%, 15% 70%, 15% 30%, 50% 10%);
+            width: 200px;
+            height: 200px;
+            background-color: rgba(0, 102, 204, 0.2);
+        }
+        
+        .radar-label {
+            position: absolute;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .line-chart {
+            position: relative;
+            height: 100%;
+            padding: 20px 0;
+        }
+        
+        .line-chart-grid {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+        }
+        
+        .line-chart-grid-line {
+            width: 100%;
+            height: 1px;
+            background-color: rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .line-chart-grid-line::before {
+            content: attr(data-label);
+            position: absolute;
+            left: -30px;
+            top: -10px;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .line-chart-line {
+            position: absolute;
+            width: calc(100% - 30px);
+            height: 3px;
+            background-color: var(--primary);
+            bottom: 50px;
+            left: 15px;
+            transform: rotate(-5deg);
+        }
+        
+        .line-chart-line::before, .line-chart-line::after {
+            content: "";
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: var(--primary);
+            border-radius: 50%;
+            top: -3px;
+        }
+        
+        .line-chart-line::before {
+            left: 0;
+        }
+        
+        .line-chart-line::after {
+            right: 0;
+        }
+        
+        .badges-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        
+        .badge {
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+        
+        .badge-icon {
+            width: 50px;
+            height: 50px;
+            background-color: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 0.5rem;
+            font-size: 1.5rem;
+        }
+        
+        .locked {
+            opacity: 0.5;
+        }
+        
+        footer {
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .quiz-section {
+            display: none;
+        }
+        
+        .quiz-section.active {
+            display: block;
+        }
+        
+        .video-section {
+            display: none;
+        }
+        
+        .video-section.active {
+            display: block;
+        }
+        
+        .dashboard-section {
+            display: block;
+        }
+        
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .video-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 aspect ratio */
+            background-color: #ddd;
+            overflow: hidden;
+        }
+        
+        .video-thumbnail img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .play-button::after {
+            content: "";
+            border-style: solid;
+            border-width: 15px 0 15px 25px;
+            border-color: transparent transparent transparent var(--primary);
+            margin-left: 5px;
+        }
+        
+        .video-info {
+            padding: 1rem;
+        }
+        
+        .video-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .video-meta {
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .progress-pill {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            background-color: var(--light);
+            border-radius: 1rem;
+            font-size: 0.8rem;
+        }
+        
+        .progress-pill.complete {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .resources-section {
+            display: none;
+        }
+        
+        .resources-section.active {
+            display: block;
+        }
+        
+        .resource-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        
+        .resource-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .resource-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        
+        .leaderboard-section {
+            display: none;
+        }
+        
+        .leaderboard-section.active {
+            display: block;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .leaderboard-table th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: normal;
+        }
+        
+        .leaderboard-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .rank {
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .rank-1, .rank-2, .rank-3 {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        .rank-1 {
+            background-color: gold;
+        }
+        
+        .rank-2 {
+            background-color: silver;
+        }
+        
+        .rank-3 {
+            background-color: #cd7f32;
+        }
+        
+        .community-section {
+            display: none;
+        }
+        
+        .community-section.active {
+            display: block;
+        }
+        
+        .chat-container {
+            background-color: white;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: 500px;
+        }
+        
+        .chat-header {
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+            font-weight: bold;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 0.75rem 1rem;
+            border-radius: 1rem;
+        }
+        
+        .message-user {
+            align-self: flex-end;
+            background-color: var(--primary);
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        
+        .message-other {
+            align-self: flex-start;
+            background-color: #f1f1f1;
+            border-bottom-left-radius: 0;
+        }
+        
+        .message-info {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+            opacity: 0.7;
+        }
+        
+        .chat-input {
+            display: flex;
+            padding: 1rem;
+            border-top: 1px solid #eee;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 2rem;
+            outline: none;
+        }
+        
+        .chat-input button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            margin-left: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-cards, .performance-charts {
+                grid-template-columns: 1fr;
+            }
+            
+            .badges-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="circuit-overlay"></div>
+        <div class="header-content">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                <h1>Electric Code Challenge</h1>
+            </div>
+            <p>Master the National Electrical Code while following along with the video series</p>
+            
+            <!-- User account section -->
+            <div class="header-user">
+                <button id="header-login-btn" class="header-login-btn">Sign In / Register</button>
+                <div id="header-user-name" class="header-user-name">Electrician1234</div>
+                <div id="header-avatar" class="header-avatar">E</div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <a href="#profile">My Profile</a>
+                    <a href="#settings">Account Settings</a>
+                    <div class="user-dropdown-divider"></div>
+                    <a href="#" id="logout-btn">Log Out</a>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <a href="#dashboard" class="nav-link active" data-section="dashboard">Dashboard</a>
+        <a href="#quiz" class="nav-link" data-section="quiz">Quiz Center</a>
+        <a href="#videos" class="nav-link" data-section="videos">Video Library</a>
+        <a href="#resources" class="nav-link" data-section="resources">Study Resources</a>
+        <a href="#leaderboard" class="nav-link" data-section="leaderboard">Leaderboard</a>
+        <a href="#community" class="nav-link" data-section="community">Community</a>
+    </nav>
+    
+    <div class="container">
+        <div class="dashboard-section" id="dashboard-section">
+            <h2>Welcome back, Electrician1234!</h2>
+            
+            <div class="dashboard">
+                <aside class="user-profile">
+                    <div class="avatar">E</div>
+                    <div class="user-stats">
+                        <h3>Electrician1234</h3>
+                        <p>Apprentice Level</p>
+                        <p>Member since April 2025</p>
+                    </div>
+                    
+                    <div class="progress-bars">
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>NEC Mastery</span>
+                                <span data-progress-text="nec-mastery">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" data-progress="nec-mastery" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>Quiz Completion</span>
+                                <span data-progress-text="quiz-completion">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" data-progress="quiz-completion" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>Video Progress</span>
+                                <span data-progress-text="video-progress">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-value" data-progress="video-progress" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h4>Earned Badges</h4>
+                    <div class="badges-container">
+                        <div class="badge">
+                            <div class="badge-icon">🔌</div>
+                            <p>Safety First</p>
+                        </div>
+                        <div class="badge">
+                            <div class="badge-icon">⚡</div>
+                            <p>Code Warrior</p>
+                        </div>
+                        <div class="badge locked">
+                            <div class="badge-icon">🔒</div>
+                            <p>Expert</p>
+                        </div>
+                    </div>
+                </aside>
+                
+                <div class="main-content">
+                    <div class="stats-cards">
+                        <div class="stat-card">
+                            <div class="icon">📊</div>
+                            <h3 data-stat="average-score">0%</h3>
+                            <p>Average Score</p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon">✅</div>
+                            <h3 data-stat="quizzes-completed">0</h3>
+                            <p>Quizzes Completed</p>
+                        </div>
+                        <div class="stat-card">
+                            <div class="icon">🎬</div>
+                            <h3 data-stat="videos-watched">0</h3>
+                            <p>Videos Watched</p>
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-container">
+                        <div class="quiz-header">
+                            <h3>Continue Your Progress</h3>
+                            <div class="timer">
+                                ⏱️ Resume Quiz
+                            </div>
+                        </div>
+                        
+                        <div class="question">
+                            <h3>1. What is the purpose of Article 90 in the NEC 2017?</h3>
+                            
+                            <div class="options">
+                                <div class="option" onclick="selectOption(this)">
+                                    A. To detail wiring methods only
+                                </div>
+                                <div class="option" onclick="selectOption(this)">
+                                    B. To provide specific design specifications
+                                </div>
+                                <div class="option" onclick="selectOption(this)">
+                                    C. To ensure the practical safeguarding of persons and property
+                                </div>
+                            </div>
+                            
+                            <div class="explanation" id="explanation-1">
+                                <strong>Correct Answer: C</strong>
+                                <p>Article 90 establishes the purpose of the NEC which is the practical safeguarding of persons and property from hazards arising from the use of electricity. This foundational article sets the scope and purpose of the entire code.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="btn-group">
+                            <button class="btn" disabled>Previous</button>
+                            <button class="btn" onclick="showExplanation()">Check Answer</button>
+                        </div>
+                    </div>
+                    
+                    <h3>Your Performance Metrics</h3>
+                    
+                    <div class="performance-charts">
+                        <div class="chart-container">
+                            <h4>Category Strengths</h4>
+                            <div class="chart radar-chart">
+                                <div class="radar-area"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(0deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(45deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(90deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(135deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(180deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(225deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(270deg);"></div>
+                                <div class="radar-line" style="width: 100px; transform: rotate(315deg);"></div>
+                                
+                                <div class="radar-label" style="top: 10%; left: 50%; transform: translateX(-50%);">Article 90</div>
+                                <div class="radar-label" style="top: 30%; right: 15%;">Grounding</div>
+                                <div class="radar-label" style="top: 50%; right: 5%; transform: translateY(-50%);">GFCI</div>
+                                <div class="radar-label" style="bottom: 30%; right: 15%;">Branch Circuits</div>
+                                <div class="radar-label" style="bottom: 10%; left: 50%; transform: translateX(-50%);">Services</div>
+                                <div class="radar-label" style="bottom: 30%; left: 15%;">Wiring Methods</div>
+                                <div class="radar-label" style="top: 50%; left: 5%; transform: translateY(-50%);">Equipment</div>
+                                <div class="radar-label" style="top: 30%; left: 15%;">Safety</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h4>Progress Over Time</h4>
+                            <div class="chart line-chart">
+                                <div class="line-chart-grid">
+                                    <div class="line-chart-grid-line" data-label="100%"></div>
+                                    <div class="line-chart-grid-line" data-label="75%"></div>
+                                    <div class="line-chart-grid-line" data-label="50%"></div>
+                                    <div class="line-chart-grid-line" data-label="25%"></div>
+                                    <div class="line-chart-grid-line" data-label="0%"></div>
+                                </div>
+                                <div class="line-chart-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quiz Center Section -->
+        <div class="quiz-section" id="quiz-section">
+            <h2>Quiz Center</h2>
+            <p>Test your knowledge of the National Electrical Code with our interactive quizzes.</p>
+            
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <h3>NEC Article 90 Fundamentals</h3>
+                    <div class="timer" id="quiz-timer">
+                        ⏱️ <span id="time-display">10:00</span>
+                    </div>
+                </div>
+                
+                <div id="question-container">
+                    <!-- Questions will be dynamically loaded here -->
+                </div>
+                
+                <div class="btn-group">
+                    <button class="btn" id="prev-btn" onclick="prevQuestion()">Previous</button>
+                    <button class="btn" id="next-btn" onclick="nextQuestion()">Next Question</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Video Library Section -->
+        <div class="video-section" id="videos-section">
+            <h2>Video Library</h2>
+            <p>Watch our comprehensive video series on the National Electrical Code.</p>
+            
+            <div class="video-grid">
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 1: Introduction to NEC Article 90</div>
+                        <div class="video-meta">
+                            <span>12:45</span>
+                            <span class="progress-pill complete">Completed</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 2: Grounded Conductors</div>
+                        <div class="video-meta">
+                            <span>15:20</span>
+                            <span class="progress-pill complete">Completed</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 3: Working Space Requirements</div>
+                        <div class="video-meta">
+                            <span>18:30</span>
+                            <span class="progress-pill">In Progress (60%)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 4: Barriers and Safeguards</div>
+                        <div class="video-meta">
+                            <span>14:15</span>
+                            <span class="progress-pill">Not Started</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 5: Branch Circuits</div>
+                        <div class="video-meta">
+                            <span>20:45</span>
+                            <span class="progress-pill">Not Started</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="video-card">
+                    <div class="video-thumbnail">
+                        <img src="/api/placeholder/300/169" alt="Video thumbnail">
+                        <div class="play-button"></div>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">Episode 6: Voltage Ratings</div>
+                        <div class="video-meta">
+                            <span>16:10</span>
+                            <span class="progress-pill">Not Started</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Study Resources Section -->
+        <div class="resources-section" id="resources-section">
+            <h2>Study Resources</h2>
+            <p>Access supplementary materials to enhance your understanding of the National Electrical Code.</p>
+            
+            <div class="resource-grid">
+                <div class="resource-card">
+                    <div class="resource-icon">📚</div>
+                    <h3>NEC 2017 Study Guide</h3>
+                    <p>Comprehensive guide covering the most important aspects of the code.</p>
+                    <button class="btn">Download PDF</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">📝</div>
+                    <h3>Practice Exam</h3>
+                    <p>200 practice questions with detailed explanations.</p>
+                    <button class="btn">Start Practice</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">🔍</div>
+                    <h3>Code Lookup Tool</h3>
+                    <p>Quick reference tool for finding specific code requirements.</p>
+                    <button class="btn">Open Tool</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">📋</div>
+                    <h3>Cheat Sheets</h3>
+                    <p>Printable quick-reference guides for common calculations.</p>
+                    <button class="btn">View All</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">💻</div>
+                    <h3>Interactive Simulations</h3>
+                    <p>Visual simulations of electrical concepts and code applications.</p>
+                    <button class="btn">Launch</button>
+                </div>
+                
+                <div class="resource-card">
+                    <div class="resource-icon">📱</div>
+                    <h3>Mobile Flashcards</h3>
+                    <p>Study on the go with our mobile flashcard deck.</p>
+                    <button class="btn">Get Access</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Leaderboard Section -->
+        <div class="leaderboard-section" id="leaderboard-section">
+            <h2>Community Leaderboard</h2>
+            <p>See how you rank among other electricians studying the NEC.</p>
+            
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Name</th>
+                        <th>Level</th>
+                        <th>Quizzes</th>
+                        <th>Avg. Score</th>
+                        <th>Badges</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                <span class="rank-1">1</span>
+                            </div>
+                        </td>
+                        <td>MasterSparky</td>
+                        <td>Expert</td>
+                        <td>25/25</td>
+                        <td>98%</td>
+                        <td>12</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                <span class="rank-2">2</span>
+                            </div>
+                        </td>
+                        <td>VoltageVicki</td>
+                        <td>Journeyman</td>
+                        <td>23/25</td>
+                        <td>96%</td>
+                        <td>10</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                <span class="rank-3">3</span>
+                            </div>
+                        </td>
+                        <td>CircuitSage</td>
+                        <td>Journeyman</td>
+                        <td>25/25</td>
+                        <td>93%</td>
+                        <td>9</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                4
+                            </div>
+                        </td>
+                        <td>WireWizard</td>
+                        <td>Journeyman</td>
+                        <td>21/25</td>
+                        <td>91%</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                5
+                            </div>
+                        </td>
+                        <td>CodeCruncher</td>
+                        <td>Apprentice</td>
+                        <td>18/25</td>
+                        <td>90%</td>
+                        <td>7</td>
+                    </tr>
+                    <tr style="background-color: rgba(0,102,204,0.1);">
+                        <td>
+                            <div class="rank">
+                                8
+                            </div>
+                        </td>
+                        <td>Electrician1234</td>
+                        <td>Apprentice</td>
+                        <td>12/25</td>
+                        <td>87%</td>
+                        <td>5</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                9
+                            </div>
+                        </td>
+                        <td>PowerPro</td>
+                        <td>Apprentice</td>
+                        <td>11/25</td>
+                        <td>85%</td>
+                        <td>4</td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <div class="rank">
+                                10
+                            </div>
+                        </td>
+                        <td>AmpAce</td>
+                        <td>Apprentice</td>
+                        <td>10/25</td>
+                        <td>82%</td>
+                        <td>3</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Community Section -->
+        <div class="community-section" id="community-section">
+            <h2>Community Forum</h2>
+            <p>Connect with other electricians, ask questions, and share knowledge.</p>
+            
+            <div class="chat-container">
+                <div class="chat-header">
+                    NEC Study Group Chat
+                </div>
+                <div class="chat-messages">
+                    <div class="message message-other">
+                        <div class="message-content">Has anyone found a good way to remember the working space requirements in Article 110?</div>
+                        <div class="message-info">VoltageVicki - 10:23 AM</div>
+                    </div>
+                    <div class="message message-other">
+                        <div class="message-content">I use the mnemonic "3-3-3 keeps you free" for the 3ft depth, 30in width, and 3 conditions. Works for me!</div>
+                        <div class="message-info">CircuitSage - 10:25 AM</div>
+                    </div>
+                    <div class="message message-user">
+                        <div class="message-content">That's a good one! I've been struggling with those specs.</div>
+                        <div class="message-info">You - 10:28 AM</div>
+                    </div>
+                    <div class="message message-other">
+                        <div class="message-content">Also, don't forget that these requirements change based on the voltage. Higher voltage = more clearance required.</div>
+                        <div class="message-info">MasterSparky - 10:30 AM</div>
+                    </div>
+                    <div class="message message-other">
+                        <div class="message-content">Anyone taking the exam next month? I'm getting nervous!</div>
+                        <div class="message-info">PowerPro - 10:35 AM</div>
+                    </div>
+                </div>
+                <div class="chat-input">
+                    <input type="text" placeholder="Type your message...">
+                    <button>➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; 2025 Electric Code Challenge. All rights reserved.</p>
+        <p>Not affiliated with NFPA or the National Electrical Code.</p>
+    </footer>
+    
+    <!-- Account Modal -->
+    <div id="account-modal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Account Access</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            
+            <div class="modal-tabs">
+                <div class="modal-tab active" data-tab="login">Sign In</div>
+                <div class="modal-tab" data-tab="register">Register</div>
+            </div>
+            
+            <div id="verification-message" class="verification-message">
+                <p><strong>Email Verification Required</strong></p>
+                <p>A verification email has been sent to your email address. Please check your inbox and click the verification link to activate your account.</p>
+            </div>
+            
+            <div id="login-success" class="form-success">
+                <p>Login successful! Redirecting to your dashboard...</p>
+            </div>
+            
+            <div id="register-success" class="form-success">
+                <p>Registration successful! Please check your email to verify your account.</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-tab" class="modal-content active">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label" for="login-email">Email Address</label>
+                        <input type="email" id="login-email" class="form-input" required>
+                        <div class="form-error" id="login-email-error">Please enter a valid email address</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-input" required>
+                        <div class="form-error" id="login-password-error">Password is required</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn" style="width: 100%;">Sign In</button>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <a href="#" id="forgot-password-link">Forgot Password?</a>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="register-tab" class="modal-content">
+                <form id="register-form">
+                    <div class="form-group">
+                        <label class="form-label" for="register-name">Full Name</label>
+                        <input type="text" id="register-name" class="form-input" required>
+                        <div class="form-error" id="register-name-error">Please enter your name</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="register-email">Email Address</label>
+                        <input type="email" id="register-email" class="form-input" required>
+                        <div class="form-error" id="register-email-error">Please enter a valid email address</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="register-password">Password</label>
+                        <input type="password" id="register-password" class="form-input" required>
+                        <div class="form-error" id="register-password-error">Password must be at least 8 characters</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="register-confirm">Confirm Password</label>
+                        <input type="password" id="register-confirm" class="form-input" required>
+                        <div class="form-error" id="register-confirm-error">Passwords do not match</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn" style="width: 100%;">Register</button>
+                    </div>
+                    
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <p style="font-size: 0.9rem; color: #666;">By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Forgot Password Form -->
+            <div id="forgot-password-tab" class="modal-content">
+                <form id="forgot-password-form">
+                    <p>Enter your email address below and we'll send you a link to reset your password.</p>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="forgot-email">Email Address</label>
+                        <input type="email" id="forgot-email" class="form-input" required>
+                        <div class="form-error" id="forgot-email-error">Please enter a valid email address</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn" style="width: 100%;">Reset Password</button>
+                    </div>
+                    
+                    <div style="text-align: center;">
+                        <a href="#" id="back-to-login-link">Back to Sign In</a>
+                    </div>
+                </form>
+                
+                <div id="forgot-success" class="form-success">
+                    <p>If an account exists with this email, you will receive password reset instructions shortly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // User authentication state
+        let isLoggedIn = false;
+        let currentUser = null;
+        
+        // Account management functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.getElementById('header-login-btn');
+            const userAvatar = document.getElementById('header-avatar');
+            const userName = document.getElementById('header-user-name');
+            const userDropdown = document.getElementById('user-dropdown');
+            const accountModal = document.getElementById('account-modal');
+            const modalClose = document.getElementById('modal-close');
+            const modalTabs = document.querySelectorAll('.modal-tab');
+            const forgotPasswordLink = document.getElementById('forgot-password-link');
+            const backToLoginLink = document.getElementById('back-to-login-link');
+            const logoutBtn = document.getElementById('logout-btn');
+            
+            // Hide avatar and username initially (not logged in)
+            userAvatar.style.display = 'none';
+            userName.style.display = 'none';
+            
+            // Show login modal
+            loginBtn.addEventListener('click', function() {
+                accountModal.classList.add('active');
+                document.querySelector('[data-tab="login"]').click();
+            });
+            
+            // Close modal
+            modalClose.addEventListener('click', function() {
+                accountModal.classList.remove('active');
+            });
+            
+            // Modal tab switching
+            modalTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active from all tabs
+                    modalTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active to clicked tab
+                    this.classList.add('active');
+                    
+                    // Hide all content
+                    document.querySelectorAll('.modal-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show selected content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+            
+            // Forgot password link
+            forgotPasswordLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.modal-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('forgot-password-tab').classList.add('active');
+            });
+            
+            // Back to login link
+            backToLoginLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.querySelectorAll('.modal-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('login-tab').classList.add('active');
+            });
+            
+            // Toggle user dropdown
+            userAvatar.addEventListener('click', function() {
+                userDropdown.classList.toggle('active');
+            });
+            
+            // Close dropdown when clicking elsewhere
+            document.addEventListener('click', function(event) {
+                if (!event.target.closest('#header-avatar') && !event.target.closest('#user-dropdown')) {
+                    userDropdown.classList.remove('active');
+                }
+            });
+            
+            // Login form submission
+            document.getElementById('login-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset errors
+                document.querySelectorAll('.form-error').forEach(error => {
+                    error.style.display = 'none';
+                });
+                
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                let hasError = false;
+                
+                // Basic validation
+                if (!email || !email.includes('@')) {
+                    document.getElementById('login-email-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (!password) {
+                    document.getElementById('login-password-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (!hasError) {
+                    // Simulate API call (in real app, would send to server)
+                    setTimeout(() => {
+                        // Simulate successful login
+                        document.getElementById('login-success').style.display = 'block';
+                        
+                        // Simulate user data
+                        currentUser = {
+                            name: "Electrician1234",
+                            email: email,
+                            avatar: "E",
+                            verified: true
+                        };
+                        
+                        // Update UI for logged in state with zero progress for new accounts
+                        setTimeout(() => {
+                            // Initialize new user account with zero progress
+                            currentUser = {
+                                name: email.split('@')[0],
+                                email: email,
+                                avatar: email.charAt(0).toUpperCase(),
+                                verified: true,
+                                stats: {
+                                    averageScore: 0,
+                                    quizzesCompleted: 0,
+                                    videosWatched: 0,
+                                    correctAnswers: 0,
+                                    totalAnswers: 0
+                                },
+                                progress: {
+                                    necMastery: 0,
+                                    quizCompletion: 0,
+                                    videoProgress: 0
+                                },
+                                badges: []
+                            };
+                            
+                            updateUserInterface(true);
+                            accountModal.classList.remove('active');
+                            document.getElementById('login-success').style.display = 'none';
+                            document.getElementById('login-form').reset();
+                            
+                            // Reset dashboard to show zero progress
+                            updateDashboardStats();
+                        }, 1500);
+                        
+                    }, 1000);
+                }
+            });
+            
+            // Registration form submission
+            document.getElementById('register-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset errors
+                document.querySelectorAll('.form-error').forEach(error => {
+                    error.style.display = 'none';
+                });
+                
+                const name = document.getElementById('register-name').value;
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const confirm = document.getElementById('register-confirm').value;
+                let hasError = false;
+                
+                // Basic validation
+                if (!name) {
+                    document.getElementById('register-name-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (!email || !email.includes('@')) {
+                    document.getElementById('register-email-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (!password || password.length < 8) {
+                    document.getElementById('register-password-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (password !== confirm) {
+                    document.getElementById('register-confirm-error').style.display = 'block';
+                    hasError = true;
+                }
+                
+                if (!hasError) {
+                    // Simulate API call (in real app, would send to server)
+                    setTimeout(() => {
+                        // Show success and verification message
+                        document.getElementById('register-success').style.display = 'block';
+                        document.getElementById('verification-message').style.display = 'block';
+                        
+                        // Simulate email being sent
+                        console.log(`Verification email would be sent to: ${email}`);
+                        
+                        // In a real app, the server would send an email with a verification link
+                        // For demo purposes, we'll simulate this process
+                        
+                        // Reset form
+                        document.getElementById('register-form').reset();
+                        
+                        // Switch back to login tab after delay
+                        setTimeout(() => {
+                            document.querySelector('[data-tab="login"]').click();
+                            document.getElementById('register-success').style.display = 'none';
+                            document.getElementById('verification-message').style.display = 'none';
+                        }, 5000);
+                        
+                    }, 1000);
+                }
+            });
+            
+            // Forgot password form submission
+            document.getElementById('forgot-password-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Reset errors
+                document.getElementById('forgot-email-error').style.display = 'none';
+                
+                const email = document.getElementById('forgot-email').value;
+                
+                if (!email || !email.includes('@')) {
+                    document.getElementById('forgot-email-error').style.display = 'block';
+                    return;
+                }
+                
+                // Simulate API call
+                setTimeout(() => {
+                    document.getElementById('forgot-success').style.display = 'block';
+                    document.getElementById('forgot-password-form').reset();
+                    
+                    // Simulate email being sent
+                    console.log(`Password reset email would be sent to: ${email}`);
+                    
+                    // Switch back to login tab after delay
+                    setTimeout(() => {
+                        document.querySelector('[data-tab="login"]').click();
+                        document.getElementById('forgot-success').style.display = 'none';
+                    }, 3000);
+                }, 1000);
+            });
+            
+            // Logout functionality
+            logoutBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Clear user data
+                currentUser = null;
+                
+                // Update UI for logged out state
+                updateUserInterface(false);
+                
+                // Close dropdown
+                userDropdown.classList.remove('active');
+                
+                // Show confirmation (optional)
+                alert('You have been logged out successfully.');
+            });
+            
+            // Function to update UI based on login state
+            function updateUserInterface(loggedIn) {
+                isLoggedIn = loggedIn;
+                
+                if (loggedIn && currentUser) {
+                    // Update header
+                    loginBtn.style.display = 'none';
+                    userAvatar.style.display = 'flex';
+                    userName.style.display = 'block';
+                    
+                    // Set user info
+                    userAvatar.textContent = currentUser.avatar;
+                    userName.textContent = currentUser.name;
+                    
+                    // Update dashboard
+                    document.querySelector('.user-profile .avatar').textContent = currentUser.avatar;
+                    document.querySelector('.user-stats h3').textContent = currentUser.name;
+                    
+                    // Update progress bars with user's current progress
+                    if (currentUser.progress) {
+                        updateProgressBars(currentUser.progress);
+                    }
+                } else {
+                    // Update header for logged out state
+                    loginBtn.style.display = 'block';
+                    userAvatar.style.display = 'none';
+                    userName.style.display = 'none';
+                }
+            }
+            
+            // Function to update progress bars
+            function updateProgressBars(progress) {
+                document.querySelector('[data-progress="nec-mastery"]').style.width = progress.necMastery + '%';
+                document.querySelector('[data-progress="quiz-completion"]').style.width = progress.quizCompletion + '%';
+                document.querySelector('[data-progress="video-progress"]').style.width = progress.videoProgress + '%';
+                
+                document.querySelector('[data-progress-text="nec-mastery"]').textContent = progress.necMastery + '%';
+                document.querySelector('[data-progress-text="quiz-completion"]').textContent = progress.quizCompletion + '%';
+                document.querySelector('[data-progress-text="video-progress"]').textContent = progress.videoProgress + '%';
+            }
+            
+            // Function to update dashboard stats cards
+            function updateDashboardStats() {
+                if (currentUser && currentUser.stats) {
+                    document.querySelector('[data-stat="average-score"]').textContent = currentUser.stats.averageScore + '%';
+                    document.querySelector('[data-stat="quizzes-completed"]').textContent = currentUser.stats.quizzesCompleted;
+                    document.querySelector('[data-stat="videos-watched"]').textContent = currentUser.stats.videosWatched;
+                }
+            }
+            
+            // Check for existing session (would use cookies/localStorage in real app)
+            function checkExistingSession() {
+                // This would normally check for a valid token in cookies/localStorage
+                // and make an API call to verify the session
+                
+                // For demo purposes, we'll default to logged out
+                updateUserInterface(false);
+            }
+            
+            // Initialize session check
+            checkExistingSession();
+        });
+        
+        // Navigation functionality
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all links
+                document.querySelectorAll('.nav-link').forEach(l => {
+                    l.classList.remove('active');
+                });
+                
+                // Add active class to clicked link
+                this.classList.add('active');
+                
+                // Hide all sections
+                document.querySelectorAll('[id$="-section"]').forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                // Show selected section
+                const sectionId = this.getAttribute('data-section');
+                document.getElementById(sectionId + '-section').style.display = 'block';
+            });
+        });
+        
+        // Quiz functionality
+        const quizData = [
+            {
+                question: "1. What is the purpose of Article 90 in the NEC 2017?",
+                options: [
+                    "A. To detail wiring methods only",
+                    "B. To provide specific design specifications",
+                    "C. To ensure the practical safeguarding of persons and property"
+                ],
+                correct: 2,
+                explanation: "Article 90 establishes the purpose of the NEC which is the practical safeguarding of persons and property from hazards arising from the use of electricity. This foundational article sets the scope and purpose of the entire code."
+            },
+            {
+                question: "2. Which of the following describes a grounded conductor according to NEC?",
+                options: [
+                    "A. A conductor that is always at a high voltage",
+                    "B. A system or circuit conductor that is intentionally grounded",
+                    "C. A conductor that can never be touched"
+                ],
+                correct: 1,
+                explanation: "A grounded conductor is defined in the NEC as a system or circuit conductor that is intentionally grounded. This is typically the neutral conductor in most electrical systems."
+            },
+            {
+                question: "3. What is the minimum height that unguarded live parts must be maintained above working space according to NEC?",
+                options: [
+                    "A. 1.2 m",
+                    "B. 3.0 m",
+                    "C. 2.5 m"
+                ],
+                correct: 2,
+                explanation: "The NEC requires that unguarded live parts operating at 50 volts or more must be maintained at a height of at least 2.5 meters (8 feet) above the working space to prevent accidental contact."
+            },
+            {
+                question: "4. How must barriers or fences be constructed for electrical installations?",
+                options: [
+                    "A. To allow unqualified personnel to access",
+                    "B. To be removable easily",
+                    "C. To be effective enough to prevent unauthorized access"
+                ],
+                correct: 2,
+                explanation: "Barriers or fences must be constructed to be effective enough to prevent unauthorized access to electrical equipment, protecting unqualified persons from potential electrical hazards."
+            },
+            {
+                question: "5. What type of equipment does the NEC define as a branch circuit?",
+                options: [
+                    "A. The conductors connecting from a service point to the utility",
+                    "B. The wiring connecting loads between protective devices",
+                    "C. The main panel that feeds power to appliances"
+                ],
+                correct: 1,
+                explanation: "A branch circuit is defined as the circuit conductors between the final overcurrent device protecting the circuit and the outlet(s). These are the circuits that deliver power to electrical loads like receptacles and lighting."
+            }
+        ];
+        
+        let currentQuestion = 0;
+        
+        function loadQuestion() {
+            const questionContainer = document.getElementById('question-container');
+            const q = quizData[currentQuestion];
+            
+            let optionsHTML = '';
+            q.options.forEach((option, index) => {
+                optionsHTML += `<div class="option" onclick="selectOption(this, ${index})">${option}</div>`;
+            });
+            
+            questionContainer.innerHTML = `
+                <div class="question">
+                    <h3>${q.question}</h3>
+                    <div class="options">
+                        ${optionsHTML}
+                    </div>
+                    <div class="explanation" id="explanation-${currentQuestion}">
+                        <strong>Correct Answer: ${q.options[q.correct]}</strong>
+                        <p>${q.explanation}</p>
+                    </div>
+                </div>
+            `;
+            
+            // Update buttons
+            document.getElementById('prev-btn').disabled = currentQuestion === 0;
+            
+            // Handle last question
+            if (currentQuestion === quizData.length - 1) {
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('finish-quiz-btn').style.display = 'block';
+            } else {
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('finish-quiz-btn').style.display = 'none';
+            }
+            
+            // Update question counter
+            document.getElementById('current-question-num').textContent = currentQuestion + 1;
+            document.getElementById('total-questions').textContent = quizData.length;
+            
+            // Update score if user is logged in
+            if (isLoggedIn && currentUser && currentUser.stats) {
+                document.getElementById('current-score').textContent = currentUser.stats.averageScore;
+            } else {
+                document.getElementById('current-score').textContent = 0;
+            }
+        }
+        
+        function selectOption(element, index) {
+            // Don't allow selection change if answer is already shown
+            if (document.querySelector('.option.correct') || document.querySelector('.option.incorrect')) {
+                return;
+            }
+            
+            // Clear all selections first
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class
+            element.classList.add('selected');
+            
+            // Automatically show the answer after selection
+            showExplanation(index);
+        }
+        
+        function showExplanation(selectedIndex) {
+            const explanation = document.getElementById(`explanation-${currentQuestion}`);
+            explanation.classList.add('show');
+            
+            // Mark correct and incorrect answers
+            const options = document.querySelectorAll('.option');
+            const correctIndex = quizData[currentQuestion].correct;
+            
+            // Track if the answer was correct
+            let isCorrect = false;
+            
+            options.forEach((option, index) => {
+                if (index === selectedIndex) {
+                    if (index === correctIndex) {
+                        option.classList.add('correct');
+                        isCorrect = true;
+                        
+                        // Add checkmark icon
+                        const checkIcon = document.createElement('span');
+                        checkIcon.className = 'answer-icon correct-icon';
+                        checkIcon.innerHTML = '✓';
+                        option.appendChild(checkIcon);
+                    } else {
+                        option.classList.add('incorrect');
+                        
+                        // Add X icon
+                        const xIcon = document.createElement('span');
+                        xIcon.className = 'answer-icon incorrect-icon';
+                        xIcon.innerHTML = '✗';
+                        option.appendChild(xIcon);
+                    }
+                }
+                
+                // Always highlight the correct answer
+                if (index === correctIndex && index !== selectedIndex) {
+                    option.classList.add('correct');
+                    
+                    // Add checkmark icon to correct answer
+                    const checkIcon = document.createElement('span');
+                    checkIcon.className = 'answer-icon correct-icon';
+                    checkIcon.innerHTML = '✓';
+                    option.appendChild(checkIcon);
+                }
+            });
+            
+            // Update user's stats if logged in
+            if (isLoggedIn && currentUser) {
+                // Increment total answers
+                currentUser.stats.totalAnswers++;
+                
+                // Increment correct answers if applicable
+                if (isCorrect) {
+                    currentUser.stats.correctAnswers++;
+                }
+                
+                // Update average score
+                if (currentUser.stats.totalAnswers > 0) {
+                    currentUser.stats.averageScore = Math.round((currentUser.stats.correctAnswers / currentUser.stats.totalAnswers) * 100);
+                }
+                
+                // Update NEC mastery progress (based on correct answers percentage)
+                currentUser.progress.necMastery = currentUser.stats.averageScore;
+                
+                // Update dashboard with new stats
+                updateDashboardStats();
+                updateProgressBars(currentUser.progress);
+            }
+        }
+        
+        function nextQuestion() {
+            if (currentQuestion < quizData.length - 1) {
+                currentQuestion++;
+                loadQuestion();
+            } else {
+                // Show finish button on last question
+                document.getElementById('next-btn').style.display = 'none';
+                document.getElementById('finish-quiz-btn').style.display = 'block';
+            }
+        }
+        
+        function prevQuestion() {
+            if (currentQuestion > 0) {
+                currentQuestion--;
+                loadQuestion();
+                
+                // Make sure the next button is visible if we navigate back from the last question
+                document.getElementById('next-btn').style.display = 'block';
+                document.getElementById('finish-quiz-btn').style.display = 'none';
+            }
+        }
+        
+        function finishQuiz() {
+            // Update quiz completion stats for logged in users
+            if (isLoggedIn && currentUser) {
+                currentUser.stats.quizzesCompleted++;
+                
+                // Update quiz completion progress (based on percentage of total quizzes)
+                const totalQuizzes = 25; // Total quizzes in the system
+                currentUser.progress.quizCompletion = Math.round((currentUser.stats.quizzesCompleted / totalQuizzes) * 100);
+                
+                // Update dashboard with new stats
+                updateDashboardStats();
+                updateProgressBars(currentUser.progress);
+            }
+            
+            // Show completion message
+            const completionMessage = document.createElement('div');
+            completionMessage.className = 'quiz-completion-message';
+            completionMessage.innerHTML = `
+                <div class="completion-icon">🏆</div>
+                <h3>Congratulations!</h3>
+                <p>You've completed the NEC Article 90 Fundamentals Quiz</p>
+                <p class="score-text">Your score: <span>${currentUser ? currentUser.stats.averageScore : 0}%</span></p>
+                <button class="btn" onclick="document.querySelector('[data-section=\\'dashboard\\']').click()">
+                    Return to Dashboard
+                </button>
+            `;
+            
+            const quizContainer = document.querySelector('.quiz-container');
+            quizContainer.innerHTML = '';
+            quizContainer.appendChild(completionMessage);
+        }
+        
+        // Home page quiz options select
+        function selectOption(element) {
+            // Clear all selections first
+            document.querySelectorAll('.option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class
+            element.classList.add('selected');
+        }
+        
+        // Show explanation on the home page quiz
+        function showExplanation() {
+            document.getElementById('explanation-1').style.display = 'block';
+            
+            // Mark correct answer
+            document.querySelectorAll('.option').forEach((option, index) => {
+                if (option.classList.contains('selected')) {
+                    if (index === 2) { // The correct answer is C
+                        option.classList.add('correct');
+                    } else {
+                        option.classList.add('incorrect');
+                    }
+                }
+                
+                if (index === 2) { // The correct answer is C
+                    option.classList.add('correct');
+                }
+            });
+        }
+        
+        // Initialize quiz when navigating to quiz section
+        document.querySelector('[data-section="quiz"]').addEventListener('click', function() {
+            loadQuestion();
+            // Start timer
+            startTimer(10 * 60); // 10 minutes
+        });
+        
+        // Timer functionality
+        function startTimer(duration) {
+            let timer = duration;
+            const display = document.getElementById('time-display');
+            
+            const interval = setInterval(function () {
+                const minutes = parseInt(timer / 60, 10);
+                const seconds = parseInt(timer % 60, 10);
+                
+                display.textContent = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                
+                if (--timer < 0) {
+                    clearInterval(interval);
+                    alert('Time\'s up! Your progress has been saved.');
+                    document.querySelector('[data-section="dashboard"]').click();
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
